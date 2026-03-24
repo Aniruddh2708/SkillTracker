@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Launch GUI LoginApp (F5)",
+      "request": "launch",
+      "mainClass": "gui.LoginApp",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build GUI (JavaFX)",
+      "vmArgs": "--add-modules javafx.controls,javafx.graphics"
+    },
+    {
+      "type": "java",
+      "name": "Launch Core LoginFlowTestRunner",
+      "request": "launch",
+      "mainClass": "LoginFlowTestRunner",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build Core (No GUI)"
+    }
+  ]
+}

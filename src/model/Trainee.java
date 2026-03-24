@@ -1,0 +1,72 @@
+package model;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+
+public class Trainee extends User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private ArrayList<String> enrolledSkills;
+    private String trainerId;
+    private int completionPercent;
+    private boolean isCertified;
+
+    public Trainee(String userId, String name, String email,
+                   String passwordHash, String trainerId) {
+        super(userId, name, email, passwordHash);
+        this.enrolledSkills   = new ArrayList<>();
+        this.trainerId        = trainerId;
+        this.completionPercent = 0;
+        this.isCertified      = false;
+    }
+
+    @Override
+    public boolean login(String password) {
+        if (password == null || password.isEmpty()) {
+            return false;
+        }
+        return password.equals(getPasswordHash());
+    }
+
+    @Override
+    public String getRole() {
+        return "TRAINEE";
+    }
+
+    public void enrollInSkill(String skillName) {
+        if (!enrolledSkills.contains(skillName)) {
+            enrolledSkills.add(skillName);
+            System.out.println(getName() + " enrolled in: " + skillName);
+        }
+    }
+
+    public void updateProgress(int percent) {
+        this.completionPercent = Math.max(0, Math.min(100, percent));
+        if (this.completionPercent >= 100) {
+            isCertified = true;
+            System.out.println("🏅 " + getName() + " is now certified!");
+        }
+    }
+
+    public void exportPortfolio() {
+        System.out.println("=== Portfolio: " + getName() + " ===");
+        System.out.println("Email   : " + getEmail());
+        System.out.println("Skills  : " + enrolledSkills);
+        System.out.println("Progress: " + completionPercent + "%");
+        System.out.println("Certified: " + isCertified);
+    }
+
+
+    public ArrayList<String> getEnrolledSkills()  { return enrolledSkills;      }
+    public String            getTrainerId()        { return trainerId;           }
+    public int               getCompletionPercent(){ return completionPercent;   }
+    public boolean           isCertified()         { return isCertified;         }
+
+
+    @Override
+    public String toString() {
+        return String.format("[TRAINEE] %s <%s> (ID: %s) — %d%% complete",
+                getName(), getEmail(), getUserId(), completionPercent);
+    }
+}

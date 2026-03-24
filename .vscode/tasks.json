@@ -1,0 +1,61 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build GUI (JavaFX)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; $JDK = if ($env:JDK_FX_HOME) { $env:JDK_FX_HOME } elseif (Test-Path 'C:/Program Files/Zulu/zulu-17') { 'C:/Program Files/Zulu/zulu-17' } else { throw 'Install Azul ZuluFX JDK 17 or set JDK_FX_HOME.' }; $sources = Get-ChildItem -Path src -Filter '*.java' -Recurse | ForEach-Object { $_.FullName }; & \"$JDK/bin/javac.exe\" -encoding UTF-8 --add-modules javafx.controls,javafx.graphics -cp 'lib/mysql-connector-j-8.0.33.jar;.' -d out $sources"
+      ],
+      "group": "build",
+      "problemMatcher": [
+        "$javac"
+      ]
+    },
+    {
+      "label": "Run GUI LoginApp (JavaFX)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; $JDK = if ($env:JDK_FX_HOME) { $env:JDK_FX_HOME } elseif (Test-Path 'C:/Program Files/Zulu/zulu-17') { 'C:/Program Files/Zulu/zulu-17' } else { throw 'Install Azul ZuluFX JDK 17 or set JDK_FX_HOME.' }; & \"$JDK/bin/java.exe\" --add-modules javafx.controls,javafx.graphics -cp 'out;lib/mysql-connector-j-8.0.33.jar' gui.LoginApp"
+      ],
+      "group": "test"
+    },
+    {
+      "label": "Build Core (No GUI)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; $sources = Get-ChildItem -Path src -Filter '*.java' -Recurse | Where-Object { $_.FullName -notmatch '\\\\src\\\\gui\\\\' } | ForEach-Object { $_.FullName }; javac -encoding UTF-8 -cp 'lib/mysql-connector-j-8.0.33.jar;.' -d out $sources"
+      ],
+      "problemMatcher": [
+        "$javac"
+      ]
+    },
+    {
+      "label": "Run Core LoginFlowTestRunner",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "java -cp 'out;lib/mysql-connector-j-8.0.33.jar' LoginFlowTestRunner"
+      ]
+    }
+  ]
+}

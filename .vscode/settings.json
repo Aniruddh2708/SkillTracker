@@ -1,0 +1,16 @@
+{
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "C:/Program Files/Zulu/zulu-17",
+      "default": true
+    }
+  ],
+  "java.project.sourcePaths": [
+    "src"
+  ],
+  "java.project.outputPath": "out",
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar"
+  ]
+}
