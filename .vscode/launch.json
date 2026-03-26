@@ -6,7 +6,7 @@
       "name": "Launch GUI LoginApp (F5)",
       "request": "launch",
       "mainClass": "gui.LoginApp",
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/SkillTracker",
       "preLaunchTask": "Build GUI (JavaFX)",
       "vmArgs": "--add-modules javafx.controls,javafx.graphics"
     },
@@ -15,7 +15,7 @@
       "name": "Launch Core LoginFlowTestRunner",
       "request": "launch",
       "mainClass": "LoginFlowTestRunner",
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/SkillTracker",
       "preLaunchTask": "Build Core (No GUI)"
     }
   ]

@@ -1,6 +1,4 @@
 package model;
-
-
 public class Skill {
     public enum SkillLevel {
         BEGINNER,

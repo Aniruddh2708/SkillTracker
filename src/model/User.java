@@ -8,10 +8,10 @@ public abstract class User {
     private String passwordHash;
 
     protected User(String userId, String name, String email, String passwordHash) {
-        this.userId       = userId;
-        this.name         = name;
-        this.email        = email;
-        this.passwordHash = passwordHash;
+        this.userId=userId;
+        this.name=name;
+        this.email=email;
+        this.passwordHash=passwordHash;
     }
 
     public abstract boolean login(String password);

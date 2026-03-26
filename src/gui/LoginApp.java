@@ -183,8 +183,8 @@ public class LoginApp extends Application {
         loginButton.setOnAction(e -> handleLogin());
 
         // Demo hint
-        Text hint = new Text("Demo: trainer@skillbridge.com / trainer123\n"
-                           + "      riya@skillbridge.com / trainee123");
+        Text hint = new Text("Demo: arun@skillbridge.com / train123\n"
+                   + "      riya@skillbridge.com / abc123");
         hint.setFont(Font.font("Verdana", 11));
         hint.setFill(Color.web(TEXT_MUTED, 0.7));
         hint.setLineSpacing(3);

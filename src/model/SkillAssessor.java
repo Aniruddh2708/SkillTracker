@@ -1,8 +1,5 @@
 package model;
-
-
 public abstract class SkillAssessor {
-
     protected String assessorId;
     protected String assessorName;
 
@@ -10,9 +7,7 @@ public abstract class SkillAssessor {
         this.assessorId   = assessorId;
         this.assessorName = assessorName;
     }
-
     public abstract int evaluate(Trainee trainee, Skill skill);
-
     public int assess(Trainee trainee, Skill skill) {
         int score = evaluate(trainee, skill);
 
@@ -25,16 +20,12 @@ public abstract class SkillAssessor {
                 assessorName, trainee.getName(), skill.getSkillName(), score);
         return score;
     }
-
-
     public String getAssessorId()   { 
         return assessorId;   
     }
     public String getAssessorName() { 
         return assessorName; 
     }
-
-
     @Override
     public String toString() {
         return String.format("SkillAssessor{id='%s', name='%s'}", assessorId, assessorName);
