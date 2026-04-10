@@ -16,6 +16,7 @@ import model.Trainee;
 import model.Skill;
 import model.Skill.SkillLevel;
 import service.PortfolioExporter;
+import db.UserDAO;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,6 +47,7 @@ public class TraineeDashboard {
 
     private final Trainee trainee;
     private final Stage   stage = new Stage();
+    private final UserDAO userDAO = new UserDAO();
     private final PortfolioExporter portfolioExporter = new PortfolioExporter();
 
     // UI refs
@@ -55,22 +57,18 @@ public class TraineeDashboard {
     private Text        certBadge;
     private Label       statusLabel;
 
-    // Demo skills — in Phase 3 these will come from SkillDAO
-    private final List<Skill> demoSkills = Arrays.asList(
-        new Skill("SK-001", "Basic Electrical Wiring",   SkillLevel.BEGINNER),
-        new Skill("SK-002", "Circuit Breaker Installation", SkillLevel.INTERMEDIATE),
-        new Skill("SK-003", "Safety Protocols",          SkillLevel.BEGINNER),
-        new Skill("SK-004", "Advanced Fault Diagnosis",  SkillLevel.ADVANCED)
-    );
+    // Data fetched from Trainee object populated via UserDAO
+    private final List<Skill> activeSkills;
 
     // ─────────────────────────────────────────────────────────────────────────
 
     public TraineeDashboard(Trainee trainee) {
         this.trainee = trainee;
+        this.activeSkills = trainee.getEnrolledSkills();
     }
 
     public void show() {
-        stage.setTitle("SkillBridge — My Portfolio");
+        stage.setTitle("SkillBridge - My Portfolio");
         stage.setMinWidth(860);
         stage.setMinHeight(620);
 
@@ -99,7 +97,7 @@ public class TraineeDashboard {
         logo.setFont(Font.font("Georgia", FontWeight.BOLD, 20));
         logo.setFill(Color.web(ACCENT_TEAL));
 
-        Text sep = new Text("·");
+        Text sep = new Text("-");
         sep.setFill(Color.web(TEXT_MUTED));
 
         Text pageTitle = new Text("My Portfolio");
@@ -110,12 +108,12 @@ public class TraineeDashboard {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         // Certification badge — shown only if certified
-        certBadge = new Text("🏅  CERTIFIED");
+        certBadge = new Text("CERTIFIED");
         certBadge.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
         certBadge.setFill(Color.web(SUCCESS_GREEN));
         certBadge.setVisible(trainee.isCertified());
 
-        Label nameBadge = new Label("👤  " + trainee.getName());
+        Label nameBadge = new Label("User: " + trainee.getName());
         nameBadge.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
         nameBadge.setTextFill(Color.web(TEXT_PRIMARY));
         nameBadge.setStyle(
@@ -126,7 +124,7 @@ public class TraineeDashboard {
             "-fx-padding: 6 14;"
         );
 
-        Button logoutBtn = new Button("↩ Logout");
+        Button logoutBtn = new Button("Logout");
         logoutBtn.setStyle(
             "-fx-background-color: transparent;" +
             "-fx-text-fill: " + ACCENT_WARM + ";" +
@@ -200,7 +198,7 @@ public class TraineeDashboard {
         progressText.setFill(Color.web(ACCENT_TEAL));
 
         // Export portfolio button
-        Button exportBtn = new Button("⬇  Export Portfolio");
+        Button exportBtn = new Button("Download Portfolio");
         exportBtn.setMaxWidth(Double.MAX_VALUE);
         exportBtn.setStyle(
             "-fx-background-color: transparent;" +
@@ -251,10 +249,17 @@ public class TraineeDashboard {
         subHeading.setLineSpacing(3);
 
         skillListBox.getChildren().addAll(heading, subHeading);
-
-        // Render a card for each demo skill
-        for (Skill skill : demoSkills) {
-            skillListBox.getChildren().add(buildSkillCard(skill));
+        
+        if (activeSkills.isEmpty()) {
+            Text emptyMsg = new Text("\nNo skills assigned yet. Please contact your trainer.");
+            emptyMsg.setFont(Font.font("Verdana", 14));
+            emptyMsg.setFill(Color.web(TEXT_MUTED));
+            skillListBox.getChildren().add(emptyMsg);
+        } else {
+            // Render a card for each active skill
+            for (Skill skill : activeSkills) {
+                skillListBox.getChildren().add(buildSkillCard(skill));
+            }
         }
 
         ScrollPane scroll = new ScrollPane(skillListBox);
@@ -302,21 +307,14 @@ public class TraineeDashboard {
         info.getChildren().addAll(skillName, meta);
 
         // Completion status text
-        Text statusText = new Text(skill.isCompleted() ? "✓  Completed" : "Pending");
+        Text statusText = new Text(skill.isCompleted() ? "[DONE]" : "Pending");
         statusText.setFont(Font.font("Verdana", 12));
         statusText.setFill(Color.web(skill.isCompleted() ? SUCCESS_GREEN : TEXT_MUTED));
 
-        // Handle checkbox toggle (demo — in Phase 3 this calls SkillDAO)
+        // Handle checkbox toggle (Persistent via UserDAO)
         check.setOnAction(e -> {
             if (check.isSelected()) {
-                skill.markCompleted();
-                check.setDisable(true);
-                skillName.setFill(Color.web(TEXT_MUTED));
-                skillName.setStrikethrough(true);
-                statusText.setText("✓  Completed");
-                statusText.setFill(Color.web(SUCCESS_GREEN));
-                card.setStyle(card.getStyle().replace(BORDER_COLOR, ACCENT_TEAL));
-                recalculateProgress();
+                handleSkillCompletion(skill, check, skillName, statusText, card);
             }
         });
 
@@ -355,9 +353,35 @@ public class TraineeDashboard {
 
     // ── Recalculate progress from skill list ──────────────────────────────────
 
+    private void handleSkillCompletion(Skill skill, CheckBox check, Text skillName, Text statusText, HBox card) {
+        Task<Void> task = new Task<Void>() {
+            @Override protected Void call() throws Exception {
+                userDAO.updateTraineeSkill(trainee.getUserId(), skill.getSkillId(), true, 100);
+                return null;
+            }
+        };
+        task.setOnSucceeded(e -> {
+            skill.markCompleted();
+            check.setDisable(true);
+            skillName.setFill(Color.web(TEXT_MUTED));
+            skillName.setStrikethrough(true);
+            statusText.setText("[DONE]");
+            statusText.setFill(Color.web(SUCCESS_GREEN));
+            card.setStyle(card.getStyle().replace(BORDER_COLOR, ACCENT_TEAL));
+            recalculateProgress();
+            showStatus("[OK] Progress synced to database.", SUCCESS_GREEN);
+        });
+        task.setOnFailed(e -> {
+            check.setSelected(false);
+            showStatus("Sync failed: " + task.getException().getMessage(), ERROR_RED);
+        });
+        new Thread(task).start();
+    }
+
     private void recalculateProgress() {
-        long completed = demoSkills.stream().filter(Skill::isCompleted).count();
-        int  percent   = (int) Math.round((completed * 100.0) / demoSkills.size());
+        if (activeSkills.isEmpty()) return;
+        long completed = activeSkills.stream().filter(Skill::isCompleted).count();
+        int  percent   = (int) Math.round((completed * 100.0) / activeSkills.size());
         trainee.updateProgress(percent);
 
         overallBar.setProgress(percent / 100.0);
@@ -375,7 +399,7 @@ public class TraineeDashboard {
         Task<String> exportTask = new Task<String>() {
             @Override
             protected String call() throws IOException {
-                return portfolioExporter.exportToTextFile(trainee, demoSkills).toString();
+                return portfolioExporter.exportToTextFile(trainee, activeSkills).toString();
             }
         };
 

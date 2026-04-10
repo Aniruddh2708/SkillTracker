@@ -62,7 +62,8 @@ public class LoginFlowTestRunner {
         Trainee trainee = new Trainee("TN-TEST", "Test Trainee", "s@test.com", "abc123", "TR-TEST");
 
         trainer.enrollTrainee(trainee);
-        trainee.enrollInSkill("Basic Wiring");
+        Skill wiring = new Skill("SK-001", "Basic Wiring", "ELECTRICAL", SkillLevel.BEGINNER);
+        trainee.enrollInSkill(wiring);
         trainee.updateProgress(85);
 
         System.out.println(trainer);
@@ -70,7 +71,6 @@ public class LoginFlowTestRunner {
         trainee.exportPortfolio();
 
         System.out.println("\n--- Skill Assessment ---");
-        Skill wiring = new Skill("SK-001", "Basic Wiring", SkillLevel.BEGINNER);
         System.out.println("Before: " + wiring);
 
         wiring.markCompleted();

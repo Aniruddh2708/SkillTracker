@@ -14,7 +14,7 @@ public class Trainee extends User implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<String> enrolledSkills;
+    private ArrayList<Skill> enrolledSkills;
     private String trainerId;
     private int completionPercent;
     private boolean isCertified;
@@ -41,10 +41,10 @@ public class Trainee extends User implements Serializable {
         return "TRAINEE";
     }
 
-    public void enrollInSkill(String skillName) {
-        if (!enrolledSkills.contains(skillName)) {
-            enrolledSkills.add(skillName);
-            System.out.println(getName() + " enrolled in: " + skillName);
+    public void enrollInSkill(Skill skill) {
+        if (!enrolledSkills.contains(skill)) {
+            enrolledSkills.add(skill);
+            System.out.println(getName() + " enrolled in: " + skill.getSkillName());
         }
     }
 
@@ -66,7 +66,7 @@ public class Trainee extends User implements Serializable {
     }
 
 
-    public ArrayList<String> getEnrolledSkills()  { return enrolledSkills;      }
+    public ArrayList<Skill> getEnrolledSkills()  { return enrolledSkills;      }
     public String            getTrainerId()        { return trainerId;           }
     public int               getCompletionPercent(){ return completionPercent;   }
     public boolean           isCertified()         { return isCertified;         }

@@ -9,7 +9,7 @@ public class DBConnection {
     /*
      * JDBC configuration (override with environment variables if needed):
      *   SKILLBRIDGE_DB_URL      (default: jdbc:mysql://localhost:3306/skillbridge)
-     *   SKILLBRIDGE_DB_USER     (default: root — typical local MySQL)
+     *   SKILLBRIDGE_DB_USER     (default: root - typical local MySQL)
      *   SKILLBRIDGE_DB_PASSWORD (default: empty — set this if your root user has a password)
      *
      * If login shows "database error", MySQL is not reachable or credentials/schema are wrong.

@@ -18,6 +18,7 @@ import javafx.concurrent.Task;
 
 import model.Trainer;
 import model.Trainee;
+import model.Skill;
 import db.UserDAO;
 
 import java.util.List;
@@ -62,7 +63,7 @@ public class TrainerDashboard {
 
     public void show() {
         // Build dashboard once and then hydrate data asynchronously.
-        stage.setTitle("SkillBridge — Trainer Portal");
+        stage.setTitle("SkillBridge - Trainer Portal");
         stage.setMinWidth(900);
         stage.setMinHeight(620);
 
@@ -93,7 +94,7 @@ public class TrainerDashboard {
         logo.setFont(Font.font("Georgia", FontWeight.BOLD, 20));
         logo.setFill(Color.web(ACCENT_TEAL));
 
-        Text separator = new Text("·");
+        Text separator = new Text("-");
         separator.setFill(Color.web(TEXT_MUTED));
 
         Text pageTitle = new Text("Trainer Dashboard");
@@ -105,7 +106,7 @@ public class TrainerDashboard {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         // Trainer name badge
-        Label badge = new Label("👤  " + trainer.getName());
+        Label badge = new Label("User: " + trainer.getName());
         badge.setFont(Font.font("Verdana", FontWeight.BOLD, 12));
         badge.setTextFill(Color.web(TEXT_PRIMARY));
         badge.setStyle(
@@ -116,7 +117,7 @@ public class TrainerDashboard {
             "-fx-padding: 6 14;"
         );
 
-        Button logoutBtn = new Button("↩ Logout");
+        Button logoutBtn = new Button("Logout");
         logoutBtn.setStyle(
             "-fx-background-color: transparent;" +
             "-fx-text-fill: " + ACCENT_WARM + ";" +
@@ -151,19 +152,19 @@ public class TrainerDashboard {
 
         VBox rosterCard  = buildStatCard("Enrolled Trainees",
                                          String.valueOf(rosterData.size()), ACCENT_TEAL);
-        VBox certCard    = buildStatCard("Certified", "—", SUCCESS_GREEN);
-        VBox pendingCard = buildStatCard("In Progress", "—", ACCENT_WARM);
+        VBox certCard    = buildStatCard("Certified", "0", SUCCESS_GREEN);
+        VBox pendingCard = buildStatCard("In Progress", "0", ACCENT_WARM);
 
         // Keep summary cards synchronized with table backing data.
         rosterData.addListener((javafx.collections.ListChangeListener<Trainee>) c -> {
             // Count certified
             long certified = rosterData.stream().filter(Trainee::isCertified).count();
             long inProg    = rosterData.size() - certified;
-            ((Text) ((VBox) rosterCard.getChildren().get(0)).getChildren().get(1))
+            ((Text) ((VBox) rosterCard.getChildren().get(0)).getChildren().get(0))
                 .setText(String.valueOf(rosterData.size()));
-            ((Text) ((VBox) certCard.getChildren().get(0)).getChildren().get(1))
+            ((Text) ((VBox) certCard.getChildren().get(0)).getChildren().get(0))
                 .setText(String.valueOf(certified));
-            ((Text) ((VBox) pendingCard.getChildren().get(0)).getChildren().get(1))
+            ((Text) ((VBox) pendingCard.getChildren().get(0)).getChildren().get(0))
                 .setText(String.valueOf(inProg));
         });
 
@@ -204,7 +205,8 @@ public class TrainerDashboard {
 
         content.getChildren().addAll(
             buildEnrollForm(),
-            buildRosterTable()
+            buildRosterTable(),
+            buildSkillAssignmentSection()
         );
         return content;
     }
@@ -224,7 +226,7 @@ public class TrainerDashboard {
         TextField nameField  = createFormField("Full Name", 180);
         TextField emailField = createFormField("Email Address", 220);
 
-        Button enrollBtn = new Button("＋  Enroll");
+        Button enrollBtn = new Button("+  Enroll");
         enrollBtn.setPrefHeight(38);
         enrollBtn.setStyle(
             "-fx-background-color: " + ACCENT_TEAL + ";" +
@@ -460,7 +462,7 @@ public class TrainerDashboard {
             rosterData.add(newTrainee);
             nameField.clear();
             emailField.clear();
-            showStatus("✓  " + name + " enrolled successfully.", SUCCESS_GREEN);
+            showStatus("[OK] " + name + " enrolled successfully.", SUCCESS_GREEN);
         });
 
         saveTask.setOnFailed(e -> {
@@ -497,6 +499,102 @@ public class TrainerDashboard {
             "Could not load roster: " + loadTask.getException().getMessage(), ERROR_RED));
 
         new Thread(loadTask).start();
+    }
+
+    private VBox buildSkillAssignmentSection() {
+        VBox section = new VBox(14);
+        section.setPadding(new Insets(10, 0, 0, 0));
+
+        Text title = new Text("Assign Skills to Selected Trainee");
+        title.setFont(Font.font("Georgia", FontWeight.BOLD, 18));
+        title.setFill(Color.web(TEXT_PRIMARY));
+
+        HBox controls = new HBox(14);
+        controls.setAlignment(Pos.CENTER_LEFT);
+
+        ComboBox<Skill> skillCombo = new ComboBox<>();
+        skillCombo.setPromptText("Select a Skill...");
+        skillCombo.setPrefWidth(280);
+        skillCombo.setPrefHeight(38);
+        skillCombo.setStyle(
+            "-fx-background-color: " + DEEP_NAVY + ";" +
+            "-fx-text-fill: white;" +
+            "-fx-border-color: " + BORDER_COLOR + ";" +
+            "-fx-border-radius: 6;"
+        );
+        // Custom cell factory to show skill name
+        skillCombo.setCellFactory(lv -> new ListCell<Skill>() {
+            @Override protected void updateItem(Skill item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) setText(null);
+                else setText(item.getSkillName() + " [" + item.getCategory() + "]");
+            }
+        });
+        skillCombo.setButtonCell(new ListCell<Skill>() {
+            @Override protected void updateItem(Skill item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) setText(null);
+                else setText(item.getSkillName());
+            }
+        });
+
+        Button assignBtn = new Button("+  Assign Skill");
+        assignBtn.setPrefHeight(38);
+        assignBtn.setStyle(
+            "-fx-background-color: " + ACCENT_WARM + ";" +
+            "-fx-text-fill: " + DEEP_NAVY + ";" +
+            "-fx-font-family: Verdana;" +
+            "-fx-font-weight: bold;" +
+            "-fx-background-radius: 6;" +
+            "-fx-cursor: hand;"
+        );
+
+        assignBtn.setOnAction(e -> {
+            Trainee selected = rosterTable.getSelectionModel().getSelectedItem();
+            Skill skill = skillCombo.getValue();
+            if (selected == null) {
+                showStatus("Please select a trainee from the roster first.", ERROR_RED);
+                return;
+            }
+            if (skill == null) {
+                showStatus("Please select a skill to assign.", ERROR_RED);
+                return;
+            }
+            handleAssignSkill(selected, skill);
+        });
+
+        controls.getChildren().addAll(skillCombo, assignBtn);
+        section.getChildren().addAll(title, controls);
+
+        // Load available skills
+        loadAvailableSkills(skillCombo);
+
+        return section;
+    }
+
+    private void loadAvailableSkills(ComboBox<Skill> combo) {
+        Task<List<Skill>> task = new Task<List<Skill>>() {
+            @Override protected List<Skill> call() throws Exception {
+                return userDAO.getAllAvailableSkills();
+            }
+        };
+        task.setOnSucceeded(e -> combo.setItems(FXCollections.observableArrayList(task.getValue())));
+        new Thread(task).start();
+    }
+
+    private void handleAssignSkill(Trainee trainee, Skill skill) {
+        Task<Void> task = new Task<Void>() {
+            @Override protected Void call() throws Exception {
+                userDAO.assignSkillToTrainee(trainee.getUserId(), skill.getSkillId());
+                return null;
+            }
+        };
+        task.setOnSucceeded(e -> {
+            showStatus("[OK] Skill '" + skill.getSkillName() + "' assigned to " + trainee.getName(), SUCCESS_GREEN);
+            loadRoster(); // Refresh to update progress if needed
+        });
+        task.setOnFailed(e -> showStatus("Error assigning skill: " + task.getException().getMessage(), ERROR_RED));
+        new Thread(task).start();
     }
 
     private void handleLogout() {

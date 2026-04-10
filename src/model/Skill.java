@@ -11,14 +11,18 @@ public class Skill {
     }
     private String     skillId;
     private String     skillName;
+    private String     category;
     private SkillLevel level;
     private boolean    isCompleted;
+    private int        score;
 
-    public Skill(String skillId, String skillName, SkillLevel level) {
+    public Skill(String skillId, String skillName, String category, SkillLevel level) {
         this.skillId     = skillId;
         this.skillName   = skillName;
+        this.category    = category;
         this.level       = level;
         this.isCompleted = false;
+        this.score       = 0;
     }
 
     public void markCompleted() {
@@ -29,8 +33,13 @@ public class Skill {
 
     public String     getSkillId()   { return skillId;     }
     public String     getSkillName() { return skillName;   }
+    public String     getCategory()  { return category;    }
     public SkillLevel getLevel()     { return level;       }
     public boolean    isCompleted()  { return isCompleted; }
+    public int        getScore()     { return score;       }
+
+    public void setScore(int score) { this.score = score; }
+    public void setCompleted(boolean completed) { this.isCompleted = completed; }
 
     @Override
     public String toString() {

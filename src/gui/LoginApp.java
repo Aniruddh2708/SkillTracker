@@ -129,7 +129,7 @@ public class LoginApp extends Application {
         brand.getChildren().addAll(logo, tagline, sep, sub);
 
         // Bottom team label
-        Text team = new Text("Team ByteForge · T-170");
+        Text team = new Text("Team ByteForge - T-170");
         team.setFont(Font.font("Verdana", 11));
         team.setFill(Color.web(TEXT_MUTED, 0.6));
         StackPane.setAlignment(team, Pos.BOTTOM_LEFT);
@@ -171,7 +171,7 @@ public class LoginApp extends Application {
         // Password field
         VBox passwordBox = buildLabeledField("Password");
         passwordField = new PasswordField();
-        passwordField.setPromptText("••••••••");
+        passwordField.setPromptText("********");
         styleInput(passwordField);
         passwordField.setOnAction(e -> handleLogin());
         passwordBox.getChildren().add(passwordField);
@@ -295,7 +295,7 @@ public class LoginApp extends Application {
     }
 
     private void showError(String msg) {
-        statusLabel.setText("⚠  " + msg);
+        statusLabel.setText("[!] " + msg);
         statusLabel.setVisible(true);
     }
 
