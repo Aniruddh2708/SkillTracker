@@ -9,7 +9,11 @@ import java.util.List;
 
 public class UserDAO {
 
-
+    /**
+     * Looks up a trainer by unique email.
+     * Returns null instead of throwing when no match exists so callers can
+     * compose role lookup logic naturally.
+     */
     public Trainer findTrainerByEmail(String email) throws SQLException {
         String sql = "SELECT user_id, name, email, password_hash FROM trainers WHERE email = ?";
 
@@ -50,6 +54,9 @@ public class UserDAO {
         }
         return null;
     }
+    /**
+     * Persists a trainer row using a prepared statement to avoid SQL injection.
+     */
     public void saveTrainer(Trainer trainer) throws SQLException {
         String sql = "INSERT INTO trainers (user_id, name, email, password_hash) VALUES (?, ?, ?, ?)";
 
@@ -61,6 +68,9 @@ public class UserDAO {
             ps.executeUpdate();
         }
     }
+    /**
+     * Persists a trainee and links to the owning trainer via trainer_id.
+     */
     public void saveTrainee(Trainee trainee) throws SQLException {
         String sql = "INSERT INTO trainees (user_id, name, email, password_hash, trainer_id) VALUES (?, ?, ?, ?, ?)";
 
@@ -73,6 +83,10 @@ public class UserDAO {
             ps.executeUpdate();
         }
     }
+    /**
+     * Loads both trainers and trainees as `User` polymorphic instances.
+     * This is convenient for dashboards or admin views that need all users.
+     */
     public List<User> findAll() throws SQLException {
         List<User> users = new ArrayList<>();
 

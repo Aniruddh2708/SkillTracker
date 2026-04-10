@@ -1,4 +1,11 @@
 package model;
+
+/**
+ * Abstraction for skill assessment strategies.
+ *
+ * `assess(...)` provides shared workflow while `evaluate(...)` lets each
+ * strategy decide how to score a trainee.
+ */
 public abstract class SkillAssessor {
     protected String assessorId;
     protected String assessorName;
@@ -7,6 +14,9 @@ public abstract class SkillAssessor {
         this.assessorId   = assessorId;
         this.assessorName = assessorName;
     }
+    /**
+     * Strategy method implemented by concrete assessors.
+     */
     public abstract int evaluate(Trainee trainee, Skill skill);
     public int assess(Trainee trainee, Skill skill) {
         int score = evaluate(trainee, skill);

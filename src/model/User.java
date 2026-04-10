@@ -1,5 +1,11 @@
 package model;
 
+/**
+ * Abstract base model for every authenticated person in the system.
+ *
+ * Common fields (id, name, email, password hash) are centralized here so
+ * trainer/trainee classes only implement role-specific behavior.
+ */
 public abstract class User {
 
     private String userId;
@@ -14,8 +20,14 @@ public abstract class User {
         this.passwordHash=passwordHash;
     }
 
+    /**
+     * Validates the incoming password according to child-type policy.
+     */
     public abstract boolean login(String password);
 
+    /**
+     * Returns role marker used for routing and display.
+     */
     public abstract String getRole();
 
     public String getUserId()  { return userId; }

@@ -19,6 +19,15 @@ public class AuthService {
         this.userDAO = userDAO;
     }
 
+    /**
+     * Authenticates a user by:
+     * 1) checking trainer records first,
+     * 2) checking trainee records second,
+     * 3) validating password via each model's `login(...)` implementation.
+     *
+     * We wrap SQL failures in `AuthException` so UI/test layers don't need
+     * to know database details.
+     */
     public User login(String email, String password) throws AuthException {
         try {
             Trainer trainer = userDAO.findTrainerByEmail(email);
@@ -40,7 +49,9 @@ public class AuthService {
             throw new AuthException("User not found");
 
         } catch (SQLException e) {
-            throw new AuthException("Login failed due to database error", e);
+            // Include driver message so local setup issues (wrong password, DB missing) are visible.
+            String detail = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            throw new AuthException("Login failed due to database error: " + detail, e);
         }
     }
 }

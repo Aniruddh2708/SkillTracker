@@ -1,4 +1,8 @@
 package model;
+
+/**
+ * Represents one vocational skill unit/course tracked by the platform.
+ */
 public class Skill {
     public enum SkillLevel {
         BEGINNER,

@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Trainer domain model.
+ *
+ * Responsibilities:
+ * - authenticate as a trainer user,
+ * - maintain an in-memory roster reference for current session actions.
+ */
 public class Trainer extends User {
     private List<Trainee> roster;
     public Trainer(String userId, String name, String email, String passwordHash) {
@@ -25,6 +32,7 @@ public class Trainer extends User {
         if (trainee == null) {
             throw new IllegalArgumentException("Trainee cannot be null");
         }
+        // This updates local session state; DB persistence is handled by UserDAO.
         roster.add(trainee);
     }
     public List<Trainee> getRoster() {

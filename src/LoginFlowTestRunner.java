@@ -6,12 +6,21 @@ import model.Trainer;
 import model.Skill;
 import model.Skill.SkillLevel;
 
+/**
+ * Console-only sanity test runner.
+ *
+ * Purpose:
+ * - Quickly validate login/auth wiring against seeded DB users.
+ * - Exercise core model behavior without launching JavaFX UI.
+ */
 public class LoginFlowTestRunner {
 
     public static void main(String[] args) {
+        // Phase 1: integration-ish auth checks (depends on DB seed data).
         System.out.println("=== Login Flow Tests ===\n");
         runLoginTests();
 
+        // Phase 2: pure model checks (works offline, no DB required).
         System.out.println("\n=== Offline Model Tests (no DB needed) ===\n");
         runModelTests();
     }
@@ -48,6 +57,7 @@ public class LoginFlowTestRunner {
 
 
     private static void runModelTests() {
+        // Build in-memory sample objects to test OOP model interactions.
         Trainer trainer = new Trainer("TR-TEST", "Test Trainer", "t@test.com", "pass123");
         Trainee trainee = new Trainee("TN-TEST", "Test Trainee", "s@test.com", "abc123", "TR-TEST");
 

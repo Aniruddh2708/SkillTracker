@@ -1,5 +1,6 @@
 package gui;
 
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -19,7 +20,6 @@ import model.Trainer;
 import model.Trainee;
 import db.UserDAO;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,6 +61,7 @@ public class TrainerDashboard {
     }
 
     public void show() {
+        // Build dashboard once and then hydrate data asynchronously.
         stage.setTitle("SkillBridge — Trainer Portal");
         stage.setMinWidth(900);
         stage.setMinHeight(620);
@@ -115,7 +116,22 @@ public class TrainerDashboard {
             "-fx-padding: 6 14;"
         );
 
-        bar.getChildren().addAll(logo, separator, pageTitle, spacer, badge);
+        Button logoutBtn = new Button("↩ Logout");
+        logoutBtn.setStyle(
+            "-fx-background-color: transparent;" +
+            "-fx-text-fill: " + ACCENT_WARM + ";" +
+            "-fx-font-family: Verdana;" +
+            "-fx-font-size: 12px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-border-color: " + ACCENT_WARM + ";" +
+            "-fx-border-radius: 16;" +
+            "-fx-background-radius: 16;" +
+            "-fx-padding: 5 12;" +
+            "-fx-cursor: hand;"
+        );
+        logoutBtn.setOnAction(e -> handleLogout());
+
+        bar.getChildren().addAll(logo, separator, pageTitle, spacer, logoutBtn, badge);
         return bar;
     }
 
@@ -138,7 +154,7 @@ public class TrainerDashboard {
         VBox certCard    = buildStatCard("Certified", "—", SUCCESS_GREEN);
         VBox pendingCard = buildStatCard("In Progress", "—", ACCENT_WARM);
 
-        // Update roster count live as data loads
+        // Keep summary cards synchronized with table backing data.
         rosterData.addListener((javafx.collections.ListChangeListener<Trainee>) c -> {
             // Count certified
             long certified = rosterData.stream().filter(Trainee::isCertified).count();
@@ -276,45 +292,60 @@ public class TrainerDashboard {
             "-fx-table-cell-border-color: " + BORDER_COLOR + ";"
         );
         rosterTable.setPlaceholder(new Label("No trainees enrolled yet."));
+        // Stretch columns so there is no empty "phantom" column on the right.
+        // Fill table width so there is no empty strip on the right (JavaFX 20+).
+        rosterTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_LAST_COLUMN);
+        rosterTable.setRowFactory(tv -> {
+            TableRow<Trainee> row = new TableRow<>();
+            row.setStyle("-fx-background-color: " + CARD_BG + ";");
+            return row;
+        });
 
         TableColumn<Trainee, String> nameCol  = new TableColumn<>("Name");
         nameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         nameCol.setPrefWidth(200);
+        nameCol.setCellFactory(col -> darkTextCell());
 
         TableColumn<Trainee, String> emailCol = new TableColumn<>("Email");
         emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
         emailCol.setPrefWidth(250);
+        emailCol.setCellFactory(col -> darkTextCell());
 
         TableColumn<Trainee, Integer> progCol = new TableColumn<>("Progress");
         progCol.setCellValueFactory(new PropertyValueFactory<>("completionPercent"));
         progCol.setPrefWidth(120);
+        // Default JavaFX ProgressBar uses a light track (looks like white blocks on dark UI).
         progCol.setCellFactory(col -> new TableCell<Trainee, Integer>() {
-            private final ProgressBar bar = new ProgressBar();
-            {
-                bar.setPrefWidth(90);
-                bar.setStyle("-fx-accent: " + ACCENT_TEAL + ";");
-            }
             @Override
             protected void updateItem(Integer val, boolean empty) {
                 super.updateItem(val, empty);
-                if (empty || val == null) { setGraphic(null); } 
-                else {
-                    bar.setProgress(val / 100.0);
-                    setGraphic(bar);
+                styleDarkTableCell(this);
+                if (empty || val == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    setGraphic(buildDarkProgressBar(val));
+                    setText(null);
                 }
             }
         });
 
         TableColumn<Trainee, Boolean> certCol = new TableColumn<>("Certified");
-        certCol.setCellValueFactory(new PropertyValueFactory<>("certified"));
+        // Boolean getter is isCertified(); explicit factory avoids PropertyValueFactory edge cases.
+        certCol.setCellValueFactory(cdf ->
+                new ReadOnlyObjectWrapper<>(cdf.getValue().isCertified()));
         certCol.setPrefWidth(100);
         certCol.setCellFactory(col -> new TableCell<Trainee, Boolean>() {
             @Override
             protected void updateItem(Boolean val, boolean empty) {
                 super.updateItem(val, empty);
-                if (empty || val == null) { setText(null); }
-                else { setText(val ? "🏅 Yes" : "—"); 
-                       setStyle("-fx-text-fill: " + (val ? SUCCESS_GREEN : TEXT_MUTED) + ";"); }
+                styleDarkTableCell(this);
+                if (empty || val == null) {
+                    setText(null);
+                } else {
+                    setText(val ? "Yes" : "-");
+                    setTextFill(Color.web(val ? SUCCESS_GREEN : TEXT_MUTED));
+                }
             }
         });
 
@@ -323,6 +354,61 @@ public class TrainerDashboard {
 
         section.getChildren().addAll(title, rosterTable);
         return section;
+    }
+
+    /** Text cells with dark background so Modena's default white table cells do not show through. */
+    private TableCell<Trainee, String> darkTextCell() {
+        return new TableCell<Trainee, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                styleDarkTableCell(this);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item);
+                    setTextFill(Color.web(TEXT_PRIMARY));
+                }
+            }
+        };
+    }
+
+    private void styleDarkTableCell(TableCell<?, ?> cell) {
+        cell.setStyle(
+            "-fx-background-color: " + CARD_BG + ";" +
+            "-fx-border-color: " + BORDER_COLOR + ";" +
+            "-fx-table-cell-border-color: " + BORDER_COLOR + ";"
+        );
+    }
+
+    /**
+     * Thin progress indicator that matches the dashboard palette.
+     * Avoids {@link ProgressBar}, whose default skin draws a large light track.
+     */
+    private HBox buildDarkProgressBar(int percent) {
+        int p = Math.max(0, Math.min(100, percent));
+        double fillWidth = 88.0 * (p / 100.0);
+
+        StackPane track = new StackPane();
+        track.setPrefSize(88, 8);
+        track.setMaxSize(88, 8);
+        track.setStyle("-fx-background-color: " + BORDER_COLOR + "; -fx-background-radius: 4;");
+
+        Region fill = new Region();
+        fill.setPrefSize(Math.max(2, fillWidth), 6);
+        fill.setMaxHeight(6);
+        fill.setStyle("-fx-background-color: " + ACCENT_TEAL + "; -fx-background-radius: 3;");
+        track.getChildren().add(fill);
+        StackPane.setAlignment(fill, Pos.CENTER_LEFT);
+        StackPane.setMargin(fill, new Insets(1, 0, 1, 4));
+
+        Label pct = new Label(p + "%");
+        pct.setMinWidth(38);
+        pct.setStyle("-fx-text-fill: " + TEXT_MUTED + "; -fx-font-size: 11px;");
+
+        HBox row = new HBox(8, track, pct);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
     }
 
     // ── Apply dark theme to all columns ──────────────────────────────────────
@@ -352,6 +438,7 @@ public class TrainerDashboard {
         }
 
         String traineeId = "TR-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        // Temporary default password for prototype; replace with secure onboarding.
         Trainee newTrainee = new Trainee(
             traineeId,
             name,
@@ -410,5 +497,10 @@ public class TrainerDashboard {
             "Could not load roster: " + loadTask.getException().getMessage(), ERROR_RED));
 
         new Thread(loadTask).start();
+    }
+
+    private void handleLogout() {
+        LoginApp.showLoginWindow();
+        stage.close();
     }
 }

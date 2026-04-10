@@ -3,6 +3,13 @@ package model;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+/**
+ * Trainee model tracked by a specific trainer.
+ *
+ * Notes:
+ * - Implements Serializable so trainee snapshots can be stored/transferred.
+ * - Progress state (`completionPercent`) drives certification status.
+ */
 public class Trainee extends User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -42,10 +49,11 @@ public class Trainee extends User implements Serializable {
     }
 
     public void updateProgress(int percent) {
+        // Clamp progress into valid range [0,100] to avoid inconsistent state.
         this.completionPercent = Math.max(0, Math.min(100, percent));
         if (this.completionPercent >= 100) {
             isCertified = true;
-            System.out.println("🏅 " + getName() + " is now certified!");
+            System.out.println("[CERTIFIED] " + getName() + " is now certified!");
         }
     }
 
@@ -66,7 +74,7 @@ public class Trainee extends User implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("[TRAINEE] %s <%s> (ID: %s) — %d%% complete",
+        return String.format("[TRAINEE] %s <%s> (ID: %s) - %d%% complete",
                 getName(), getEmail(), getUserId(), completionPercent);
     }
 }

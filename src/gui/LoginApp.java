@@ -1,7 +1,6 @@
 package gui;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -32,6 +31,13 @@ import service.AuthException;
  */
 public class LoginApp extends Application {
 
+    /**
+     * Opens a new login window. Used by dashboards when users log out.
+     */
+    public static void showLoginWindow() {
+        new LoginApp().start(new Stage());
+    }
+
     // ── Palette ──────────────────────────────────────────────────────────────
     private static final String DEEP_NAVY    = "#0D1B2A";
     private static final String CARD_BG      = "#152232";
@@ -54,6 +60,7 @@ public class LoginApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Configure shell stage once, then compose scene graph via helper builders.
         primaryStage.setTitle("SkillBridge — Login");
         primaryStage.setResizable(false);
 
@@ -70,6 +77,7 @@ public class LoginApp extends Application {
     // ── Root layout: left decorative panel + right form ──────────────────────
 
     private HBox buildRoot() {
+        // Two-panel layout keeps branding and form concerns visually separated.
         HBox root = new HBox();
         root.getChildren().addAll(buildBrandPanel(), buildFormPanel());
         return root;
@@ -246,6 +254,7 @@ public class LoginApp extends Application {
     private void routeToDashboard(User user) {
         Stage current = (Stage) loginButton.getScene().getWindow();
 
+        // Runtime type determines which role portal is opened.
         if (user instanceof Trainer) {
             Trainer trainer = (Trainer) user;
             new TrainerDashboard(trainer).show();
